@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Navigator</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.map-container{
+  position:relative;
+  padding-bottom:56.25%;
+  border-radius:1.75rem;
+  overflow:hidden;
+  background:#020617;
+}
+.map-container iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.glass{
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(16px);
+}
+.dark .glass{
+  background:rgba(15,23,42,.8);
+}
+.fade{animation:fade .8s ease}
+@keyframes fade{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1}
+}
+.btn{
+  transition:.3s;
+}
+.btn:hover{
+  transform:translateY(-2px) scale(1.05);
+}
+.compass-wrap{
+  position:absolute;
+  top:1rem;
+  right:1rem;
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle at top,#1e293b,#020617);
+  z-index:20;
+}
+.compass-ring{
+  position:absolute;
+  inset:10px;
+  border-radius:50%;
+  border:2px dashed rgba(255,255,255,.4);
+  color:#93c5fd;
+}
+.compass-ring span{position:absolute;font-size:10px;font-weight:bold}
+.n{top:-6px;left:50%;transform:translateX(-50%)}
+.s{bottom:-6px;left:50%;transform:translateX(-50%)}
+.e{right:-6px;top:50%;transform:translateY(-50%)}
+.w{left:-6px;top:50%;transform:translateY(-50%)}
+.compass-needle{
+  font-size:30px;
+  color:#ef4444;
+}
+.compass-center{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:white;
+  position:absolute;
+}
+</style>
+</head>
+
+<body class="bg-gradient-to-br from-indigo-50 via-sky-100 to-blue-200 dark:from-[#020617] dark:to-[#0f172a] min-h-screen">
+
+<nav class="sticky top-0 z-50 backdrop-blur bg-white/60 dark:bg-[#020617]/70">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+        <i class="fa-solid fa-compass text-white"></i>
+      </div>
+      <h1 class="font-bold text-xl">Student Navigator</h1>
+    </div>
+    <button onclick="toggleDark()">
+      <i id="themeIcon" class="fa-solid fa-moon"></i>
+    </button>
+  </div>
+</nav>
+
+<main class="max-w-5xl mx-auto p-4 space-y-8 fade">
+
+<section class="glass rounded-3xl p-6 shadow">
+  <h2 class="text-2xl font-extrabold text-indigo-600">Navigate Smarter 🧭</h2>
+  <p class="mt-2 text-slate-600 dark:text-slate-300">
+    Live GPS location + smart compass
+  </p>
+</section>
+
+<section class="glass rounded-3xl p-6 shadow">
+  <h3 class="font-bold mb-4">Directions</h3>
+  <div class="grid sm:grid-cols-2 gap-3">
+    <input id="from" placeholder="From" class="p-3 rounded-xl border">
+    <input id="to" placeholder="To" class="p-3 rounded-xl border">
+  </div>
+  <div class="flex gap-3 mt-4 flex-wrap">
+    <button onclick="getDirections()" class="btn px-5 py-2 bg-indigo-600 text-white rounded-xl">Go</button>
+    <button onclick="savePlace()" class="btn px-5 py-2 bg-yellow-400 rounded-xl">⭐ Save</button>
+    <button onclick="openLiveLocation()" class="btn px-5 py-2 bg-green-500 text-white rounded-xl">
+      📍 My Location
+    </button>
+  </div>
+</section>
+
+<section class="glass rounded-3xl p-6 shadow">
+  <h3 class="font-bold mb-3">Favourite Places</h3>
+  <ul id="favList" class="space-y-2 text-sm"></ul>
+</section>
+
+<section>
+  <div class="map-container shadow-xl">
+
+    <!-- Animated Compass Overlay -->
+    <div class="compass-wrap">
+      <div id="ring" class="compass-ring">
+        <span class="n">N</span>
+        <span class="e">E</span>
+        <span class="s">S</span>
+        <span class="w">W</span>
+      </div>
+      <i id="needle" class="fa-solid fa-location-arrow compass-needle"></i>
+      <div class="compass-center"></div>
+    </div>
+
+    <!-- UPDATED MAP EMBED -->
+    <iframe
+      id="mapFrame"
+      src="https://www.google.com/maps/d/u/0/embed?mid=1PmlCPlkLLIiGndH9ZX7VSlJEuRWOxAA&ehbc=2E312F&noprof=1"
+      loading="lazy">
+    </iframe>
+
+  </div>
+</section>
+
+</main>
+
+<footer class="text-center text-sm text-slate-500 py-6">
+  @ Student Navigator
+</footer>
+
+<script>
+/* DARK MODE */
+function toggleDark(){
+  document.documentElement.classList.toggle("dark");
+  themeIcon.classList.toggle("fa-moon");
+  themeIcon.classList.toggle("fa-sun");
+}
+
+/* DIRECTIONS */
+function getDirections(){
+  if(!from.value || !to.value) return alert("Enter both locations");
+  window.open(`https://www.google.com/maps/dir/${from.value}/${to.value}`,"_blank");
+}
+
+/* FAVORITES */
+let favs = JSON.parse(localStorage.getItem("favs")) || [];
+const favList = document.getElementById("favList");
+
+function renderFavs(){
+  favList.innerHTML="";
+  favs.forEach((p,i)=>{
+    favList.innerHTML += `
+      <li class="flex justify-between bg-slate-100 p-3 rounded-xl">
+        <span>${p}</span>
+        <div class="flex gap-3">
+          <button onclick="goFav('${p}')" class="text-indigo-500">Go</button>
+          <button onclick="removeFav(${i})" class="text-red-500">✖</button>
+        </div>
+      </li>`;
+  });
+}
+renderFavs();
+
+function savePlace(){
+  if(!to.value) return;
+  if(!favs.includes(to.value)){
+    favs.push(to.value);
+    localStorage.setItem("favs",JSON.stringify(favs));
+    renderFavs();
+  }
+}
+function removeFav(i){
+  favs.splice(i,1);
+  localStorage.setItem("favs",JSON.stringify(favs));
+  renderFavs();
+}
+function goFav(p){
+  window.open(`https://www.google.com/maps/search/${p}`,"_blank");
+}
+
+/* LIVE LOCATION */
+function openLiveLocation(){
+  if(!navigator.geolocation){
+    alert("Geolocation not supported");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    window.open(`https://www.google.com/maps?q=${lat},${lon}`,"_blank");
+  },()=>{
+    alert("Location permission denied");
+  });
+}
+
+/* COMPASS */
+const needle = document.getElementById("needle");
+const ring = document.getElementById("ring");
+let current = 0;
+
+if(window.DeviceOrientationEvent){
+  window.addEventListener("deviceorientation",e=>{
+    if(e.alpha!==null){
+      current += ((360 - e.alpha) - current)*0.15;
+      needle.style.transform = `rotate(${current}deg)`;
+      ring.style.transform = `rotate(${current}deg)`;
+    }
+  });
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+
